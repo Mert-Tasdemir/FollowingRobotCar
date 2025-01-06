@@ -19,6 +19,7 @@ threshold=50
 optimal_area = 20000
 leftSpeed=0
 rightSpeed=0
+max_speed=100
 
 while True:
     # Capture a frame from the webcam
@@ -79,19 +80,8 @@ while True:
              
            
         #speed
-        if area < 20000:  
-            if area>=10000:
-                print(f"area>=10000")
-                leftSpeed=50
-                rightSpeed=50
-            elif area<10000 and area>=3000:
-                print(f"area<10000 and area>=3000")
-                leftSpeed=75
-                rightSpeed=75
-            elif area<3000 and area>=1:
-                print(f"area<3000 and area>=1")
-                leftSpeed=95
-                rightSpeed=95
+        if area < optimal_area:  
+            rightSpeed=leftSpeed=max_speed-(area/optimal_area)*max_speed
         else:
             print(f"area({area}) > 20000")
             print("NO FORWARD")
