@@ -1,11 +1,16 @@
 from ultralytics import YOLO
+from ultralytics import settings
 import cv2
 
 # Load the YOLOv11 model (change the path to your specific model path)
-model = YOLO("D:\\yolo11_custom2\\yolo11_custom2.pt")  # Use double slashes or raw string for Windows paths
+model = YOLO("./yolo11_custom2.pt")  # Use double slashes or raw string for Windows paths
+settings.update({"runs_dir": "/home/mert/sources/FollowingRobotCar"})
+
+print(settings)
+
 
 # Open webcam
-cap = cv2.VideoCapture(2)  # '0' for the default webcam
+cap = cv2.VideoCapture(0)  # '0' for the default webcam
 
 
 # Get the width and height of the frame
