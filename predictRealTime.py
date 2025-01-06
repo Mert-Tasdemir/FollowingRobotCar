@@ -17,6 +17,7 @@ right_thresholdX = frame_centerX + 50
 print(f"Frame Size: {frame_width}x{frame_height}")
 threshold=50
 optimal_area = 20000
+speed=0
 leftSpeed=0
 rightSpeed=0
 max_speed=100
@@ -74,14 +75,15 @@ while True:
         print(f"center of frame={frame_centerX},{frame_centerY}")
         print(f"frame_width={frame_width} and frame_height={frame_height}")
 
-        cv2.circle(frame, (int(target_centerX), int(target_centerY)), 5, (0, 0, 255), -1)  # Right threshold (red)
+        cv2.circle(frame, (int(target_centerX), int(target_centerY)), 5, (255, 255, 255), -1)
         cv2.putText(frame, "Target Center", (int(target_centerX) + 10, int(target_centerY) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
         
              
            
         #speed
         if area < optimal_area:  
-            rightSpeed=leftSpeed=max_speed-(area/optimal_area)*max_speed
+            speed=max_speed-(area/optimal_area)*max_speed
+            leftSpeed=rightSpeed=int(speed)
         else:
             print(f"area({area}) > 20000")
             print("NO FORWARD")
