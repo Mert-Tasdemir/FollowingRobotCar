@@ -5,7 +5,8 @@ import cv2
 model = YOLO("D:\\yolo11_custom2\\yolo11_custom2.pt")  # Use double slashes or raw string for Windows paths
 
 # Open webcam
-cap = cv2.VideoCapture(0)  # '0' for the default webcam
+cap = cv2.VideoCapture(2)  # '0' for the default webcam
+
 
 # Get the width and height of the frame
 frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -107,7 +108,14 @@ while True:
         else:
             print("CENTERED")
 
-        print(f"leftSpeed={leftSpeed} and rightSpeed={rightSpeed}")    
+        print(f"leftSpeed={leftSpeed} and rightSpeed={rightSpeed}")
+        
+        # Display leftSpeed and rightSpeed on the frame
+        cv2.putText(frame, f"Left Speed: {leftSpeed}", (10, frame_height - 40), 
+            cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+        cv2.putText(frame, f"Right Speed: {rightSpeed}", (10, frame_height - 10), 
+            cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+  
 
         
 

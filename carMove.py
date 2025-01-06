@@ -7,13 +7,14 @@ import cv2
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
 
-# Define motor control pins
-LEFT_IN1 = 17  # Left motor direction pin 1
-LEFT_IN2 = 27  # Left motor direction pin 2
-RIGHT_IN3 = 22  # Right motor direction pin 1
-RIGHT_IN4 = 23  # Right motor direction pin 2
-EN_A = 18  # Left motor speed control (PWM)
-EN_B = 19  # Right motor speed control (PWM)
+# Define motor control pins (Raspberry Pi GPIO pins)
+LEFT_IN1 = 23  # Left motor direction pin 1 (connect to IN1 on L298N)
+LEFT_IN2 = 24  # Left motor direction pin 2 (connect to IN2 on L298N)
+EN_A = 25      # Left motor speed control (PWM) (connect to ENA on L298N)
+
+RIGHT_IN3 = 22  # Right motor direction pin 1 (connect to IN3 on L298N)
+RIGHT_IN4 = 27  # Right motor direction pin 2 (connect to IN4 on L298N)
+EN_B = 17       # Right motor speed control (PWM) (connect to ENB on L298N)
 
 # Set up motor pins as outputs
 GPIO.setup([LEFT_IN1, LEFT_IN2, RIGHT_IN3, RIGHT_IN4, EN_A, EN_B], GPIO.OUT)
