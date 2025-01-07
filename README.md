@@ -20,7 +20,7 @@ apt install openssl \
     git \
     zlib1g-dev
 	
-pip install package_name --break-system-packages
+pip install ultralytics --break-system-packages
 
 sudo apt install -y python3-picamera2
 sudo apt install -y python3-picamera2 --no-install-recommends
