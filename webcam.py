@@ -78,9 +78,11 @@ while True:
     results = model.predict(source=frame, verbose=False)
     result = results[0]
 
-    speed = 0
-
-    boxes = result.boxes  # Detected bounding boxes
+    boxes = result.boxes
+    if len(boxes) == 0:
+        speed = 100.0
+    else:
+        speed = 0.0
     for box in boxes:
         # Get the bounding box coordinates
         x1, y1, x2, y2 = box.xyxy[0].tolist()
@@ -96,7 +98,6 @@ while True:
 
             scale = min(object_width / display_width / MAX_SCOPE, 1.0)
             speed = scale * 100
-            
 
     # Определяем среднюю скорость
     average_speed = 0.0
@@ -108,6 +109,9 @@ while True:
         sum_speed = sum_speed + sp
     average_speed = sum_speed / len(speeds)
 
+    print(f"sum_speed: {sum_speed}")
+
+    average_speed = 100.0 - average_speed
     draw_speedometer(frame, round(display_width/4), average_speed)
     draw_speedometer(frame, round(display_width/4 + display_width/2), average_speed)
 
