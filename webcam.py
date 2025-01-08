@@ -3,8 +3,9 @@ from ultralytics import settings
 import cv2
 import numpy as np
 import math
-import logging
 
+MIN_CONFIDENCE: float = 0.65
+MAX_SCOPE: float = 0.3
 
 def draw_speedometer(img, x, speed):
     """
@@ -44,14 +45,11 @@ def draw_speedometer(img, x, speed):
     cv2.line(img, center, (needle_x, needle_y), (0, 0, 255), 3)
 
 
-# Установить уровень логирования
-logging.getLogger().setLevel(logging.NOTSET)
 
 # Load the YOLOv11 model (change the path to your specific model path)
 model = YOLO("./yolo11_custom2.pt")
 #results = model.predict(source='0', verbose=False, show=True)
 #settings.update({"runs_dir": "/home/mert/sources/FollowingRobotCar"})
-
 print(settings)
 
 
@@ -66,19 +64,23 @@ cap.set(cv2.CAP_PROP_EXPOSURE, -5)
 cap.set(cv2.CAP_PROP_SETTINGS, 1)
 
 # Get the width and height of the frame
-frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-frame_centerX=frame_width/2
-frame_centerY=frame_height/2
-left_thresholdX = frame_centerX - 50
-right_thresholdX = frame_centerX + 50
-print(f"Frame Size: {frame_width}x{frame_height}")
-threshold=50
-optimal_area = 20000
-speed=0
-leftSpeed=0
-rightSpeed=0
-max_speed=100
+# frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+# frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+# frame_centerX=frame_width/2
+# frame_centerY=frame_height/2
+# left_thresholdX = frame_centerX - 50
+# right_thresholdX = frame_centerX + 50
+# print(f"Frame Size: {frame_width}x{frame_height}")
+# threshold=50
+# optimal_area = 20000
+# speed=0
+# leftSpeed=0
+# rightSpeed=0
+# max_speed=100
+
+rightSpeed = 0
+leftSpeed = 0 
+
 
 while True:
     # Capture a frame from the webcam
@@ -86,6 +88,8 @@ while True:
     if not ret:
         print("Failed to grab frame")
         break
+
+    display_height, display_width, _ = frame.shape
 
     # Perform detection on the current frame
     results = model.predict(source=frame, verbose=False)
@@ -116,72 +120,78 @@ while True:
         label = box.cls[0]  # Class ID (index)
         confidence = box.conf[0]  # Confidence score
 
-        # Calculate the area of the bounding box
-        width = x2 - x1
-        height = y2 - y1
-        area = width * height
+        if confidence >= MIN_CONFIDENCE:
+            cv2.rectangle(frame, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 2)
 
-        # Draw the bounding box on the frame
-        cv2.rectangle(frame, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 2)
+            # Calculate the area of the bounding box
+            object_width = x2 - x1
+            object_height = y2 - y1
+            #area = width * height
 
-        # Add the label (class name, confidence, and area)
-        #cv2.putText(frame, f"Target {confidence:.2f} Area: {int(area)}",
-        #            (int(x1), int(y1) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, 
-        #            (0, 255, 0), 2)
+            scale = min(object_width / display_width / MAX_SCOPE, 1.0)
 
-        # Print the area of the target in the console
-        #print(f"Detected Target - Area: {int(area)}, Confidence: {confidence:.2f}")
-        target_centerX=x1+(x2-x1)/2
-        target_centerY=y1+(y2-y1)/2
-        #print(f"x1={x1},y1={y1} and x2={x2},y2={y2}")
-        #print(f"center of target={target_centerX},{target_centerY}")
-        #print(f"center of frame={frame_centerX},{frame_centerY}")
-        #print(f"frame_width={frame_width} and frame_height={frame_height}")
 
-        #cv2.circle(frame, (int(target_centerX), int(target_centerY)), 5, (255, 255, 255), -1)
-        #cv2.putText(frame, "Target Center", (int(target_centerX) + 10, int(target_centerY) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
-        
-        rightSpeed = 10 
-           
-        #speed
-        if area < optimal_area:  
-            speed=max_speed-(area/optimal_area)*max_speed
-            leftSpeed=rightSpeed=int(speed)
-        else:
-            #print(f"area({area}) > 20000")
-            #print("NO FORWARD")
-            leftSpeed=0
-            #rightSpeed=0
+            print(f"confidence: {confidence:.2f} {scale:.2f}")
 
-        #left, right
-        if target_centerX<frame_centerX-threshold:
-            #print("MOVE TO LEFT")
-            if leftSpeed>0:
-                leftSpeed-=25
-            else:
-                rightSpeed+=25    
 
-        elif target_centerX>frame_centerX+threshold:
-            #print("MOVE TO RIGHT")
-            if rightSpeed>0:
-                rightSpeed-=25
-            else:
-                leftSpeed+=25
-#        else:
-#            print("CENTERED")
+            # Draw the bounding box on the frame
 
-        #print(f"leftSpeed={leftSpeed} and rightSpeed={rightSpeed}")
-        
-        # Display leftSpeed and rightSpeed on the frame
-        # cv2.putText(frame, f"Left Speed: {leftSpeed}", (10, frame_height - 40), 
-        #     cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
-        # cv2.putText(frame, f"Right Speed: {rightSpeed}", (10, frame_height - 10), 
-        #     cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+            # Add the label (class name, confidence, and area)
+            #cv2.putText(frame, f"Target {confidence:.2f} Area: {int(area)}",
+            #            (int(x1), int(y1) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, 
+            #            (0, 255, 0), 2)
+
+            # Print the area of the target in the console
+            #print(f"Detected Target - Area: {int(area)}, Confidence: {confidence:.2f}")
+            target_centerX=x1+(x2-x1)/2
+            target_centerY=y1+(y2-y1)/2
+            #print(f"x1={x1},y1={y1} and x2={x2},y2={y2}")
+            #print(f"center of target={target_centerX},{target_centerY}")
+            #print(f"center of frame={frame_centerX},{frame_centerY}")
+            #print(f"frame_width={frame_width} and frame_height={frame_height}")
+
+            #cv2.circle(frame, (int(target_centerX), int(target_centerY)), 5, (255, 255, 255), -1)
+            #cv2.putText(frame, "Target Center", (int(target_centerX) + 10, int(target_centerY) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+            
+            
+            #speed
+            # if area < optimal_area:  
+            #     speed=max_speed-(area/optimal_area)*max_speed
+            #     leftSpeed=rightSpeed=int(speed)
+            # else:
+            #     #print(f"area({area}) > 20000")
+            #     #print("NO FORWARD")
+            #     leftSpeed=0
+            #     #rightSpeed=0
+
+            # #left, right
+            # if target_centerX<frame_centerX-threshold:
+            #     #print("MOVE TO LEFT")
+            #     if leftSpeed>0:
+            #         leftSpeed-=25
+            #     else:
+            #         rightSpeed+=25    
+
+            # elif target_centerX>frame_centerX+threshold:
+            #     #print("MOVE TO RIGHT")
+            #     if rightSpeed>0:
+            #         rightSpeed-=25
+            #     else:
+            #         leftSpeed+=25
+    #        else:
+    #            print("CENTERED")
+
+            #print(f"leftSpeed={leftSpeed} and rightSpeed={rightSpeed}")
+            
+            # Display leftSpeed and rightSpeed on the frame
+            # cv2.putText(frame, f"Left Speed: {leftSpeed}", (10, frame_height - 40), 
+            #     cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+            # cv2.putText(frame, f"Right Speed: {rightSpeed}", (10, frame_height - 10), 
+            #     cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
   
 
-    height, width, _ = frame.shape
-    draw_speedometer(frame, round(width/4), rightSpeed)
-    draw_speedometer(frame, round(width/4 + width/2), rightSpeed)
+    draw_speedometer(frame, round(display_width/4), rightSpeed)
+    draw_speedometer(frame, round(display_width/4 + display_width/2), leftSpeed)
 
     # Display the frame with bounding boxes and labels
     cv2.imshow("Detection", frame)
