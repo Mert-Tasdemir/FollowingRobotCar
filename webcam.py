@@ -10,8 +10,21 @@ print(settings)
 
 
 # Open webcam
-cap = cv2.VideoCapture(0)  # '0' for the default webcam
+cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+cap.set(cv2.CAP_PROP_BRIGHTNESS, 6)
+cap.set(cv2.CAP_PROP_CONTRAST, 10)
+cap.set(cv2.CAP_PROP_SATURATION, 15)
+cap.set(cv2.CAP_PROP_HUE, 0)
+cap.set(cv2.CAP_PROP_EXPOSURE, -5)
+cap.set(cv2.CAP_PROP_GAMMA, 143)
+cap.set(cv2.CAP_PROP_SETTINGS, 1)
 
+
+
+
+
+#cap_brightness = int(cap.get(cv2.CAP_PROP_BRIGHTNESS))
+#print(f"BRIGHTNESS: {cap_brightness}")
 
 # Get the width and height of the frame
 frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -29,8 +42,16 @@ rightSpeed=0
 max_speed=100
 
 while True:
+    # Exit the loop if 'q' is pressed
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
     # Capture a frame from the webcam
     ret, frame = cap.read()
+
+    # frame = cv2.normalize(
+    #     frame, None, alpha=0, beta=180, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32SC1
+    # )    
     
     if not ret:
         print("Failed to grab frame")
@@ -52,6 +73,7 @@ while True:
     cv2.putText(frame, "Right Threshold", (int(right_thresholdX) + 10, int(frame_centerY) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
 
     # Get the bounding boxes and labels
+    
     boxes = result.boxes  # Detected bounding boxes
     for box in boxes:
         # Get the bounding box coordinates
@@ -127,9 +149,6 @@ while True:
     # Display the frame with bounding boxes and labels
     cv2.imshow("Detection", frame)
 
-    # Exit the loop if 'q' is pressed
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
 
 # Release the capture object and close all OpenCV windows
 cap.release()
