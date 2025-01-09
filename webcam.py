@@ -80,9 +80,7 @@ while True:
     else:
         speed_right = average_speed
         speed_left = average_speed + average_slip_x
-
     # print(f"average_slip_x: {average_slip_x:.2f}, average_speed: {average_speed:.2f}, speed_left: {speed_left:.2f}, speed_right: {speed_right:.2f}")
-
 
     # Draw speedometers
     draws.draw_speedometer(frame, round(display_width / 4), speed_left)
