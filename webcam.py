@@ -34,7 +34,7 @@ def initialize_camera_work():
     return cap
 
 # Load YOLO model
-model = YOLO("./yolo11_custom2.pt")
+model = YOLO("./yolo11n.pt")
 print(settings)
 
 # Initialize camera
