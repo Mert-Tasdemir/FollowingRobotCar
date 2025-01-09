@@ -3,6 +3,7 @@ from ultralytics import settings
 import cv2
 import numpy as np
 import math
+from PIL import ImageFont, ImageDraw, Image
 
 # Constants
 MIN_CONFIDENCE = 0.54
@@ -41,7 +42,7 @@ def draw_speedometer(img, x, speed):
     cv2.circle(overlay, center, bg_radius, (0, 0, 0), -1)
     alpha = 0.2  # Transparency factor for darkening
     blended = cv2.addWeighted(overlay, alpha, img, 1 - alpha, 0)
-    blurred_overlay = cv2.GaussianBlur(blended, (10, 10), 0)
+    blurred_overlay = cv2.GaussianBlur(blended, (7, 7), 0)
     img[mask[:, :, 0] == 255] = blurred_overlay[mask[:, :, 0] == 255]
 
     # Draw circle
@@ -66,6 +67,14 @@ def draw_speedometer(img, x, speed):
     needle_x = int(center[0] + (radius - 20) * math.cos(needle_angle))
     needle_y = int(center[1] + (radius - 20) * math.sin(needle_angle))
     cv2.line(img, center, (needle_x, needle_y), (0, 0, 255), 3)
+
+    # Draw speed value
+    speed_value = str(int(speed))
+    # speed_value = str(round(float(speed), 0))
+    text_size = cv2.getTextSize(speed_value, cv2.FONT_HERSHEY_SIMPLEX, 1.0, 2)[0]
+    text_x = center[0] - text_size[0] // 2
+    text_y = center[1] + radius // 2 + text_size[1]
+    cv2.putText(img, speed_value, (text_x, text_y), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (240, 240, 240), 2)    
 
 def initialize_camera():
     """Initializes and configures the webcam."""
