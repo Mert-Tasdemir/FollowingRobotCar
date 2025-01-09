@@ -1,11 +1,8 @@
 from ultralytics import YOLO
 from ultralytics import settings
 import cv2
-
-
 import libs.draws as draws
-import libs.calculator as calculator  
-
+import libs.calculator as calculator
 
 # Constants
 MIN_CONFIDENCE = 0.54
