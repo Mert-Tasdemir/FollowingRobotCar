@@ -68,7 +68,7 @@ def draw_speedometer(img, x, average_speed):
     d_angle = -2.45
     d_width = 1.45
 
-    speed = (1.0 - average_speed) * MAX_SPEED
+    speed = average_speed * MAX_SPEED
 
     # Create a mask for the blurred background circle
     mask = np.zeros_like(img, dtype=np.uint8)
@@ -108,8 +108,8 @@ def draw_speedometer(img, x, average_speed):
 
     # Draw speed value
     if speed > 0.0:
-        grey = int(255*(1-average_speed))
-        red  = int(255*average_speed)
+        grey = int(255*average_speed)
+        red  = int(255*(1.0 - average_speed))
         color = (grey, grey, red+grey)
         speed_value = str(int(speed))
         text_size = cv2.getTextSize(speed_value, cv2.FONT_HERSHEY_SIMPLEX, 1.0, 2)[0]
@@ -147,7 +147,7 @@ def calculate_speed(target_size, display_width):
     raw_speed = target_width / display_width
     speed = max(raw_speed - MIN_TARGET, 0.0)
     speed = min(speed * SCOPE_TARGET, 1.0)
-    return speed * speed
+    return 1.0 - speed * speed
 
 def calculate_slip_x(target_size, display_width):
     x1, _, x2, _ = target_size
@@ -184,7 +184,7 @@ print(settings)
 cap = initialize_camera()
 
 # Speed tracking variables
-speeds = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+speeds = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 slips = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
 while True:
@@ -216,18 +216,27 @@ while True:
         draw_target((x1, y1, x2, y2))
 
     if not is_detected:
-        speed = 1.0
+        speed = 0.0
 
     # Update average speed
     average_speed = update_average_speed(speeds, speed)
 
     # Update average slip_x
     average_slip_x = update_average_slip_x(slips, slip_x)
-    print(f"average_slip_x: {average_slip_x}")        
+
+    if average_slip_x > 0.0:
+        speed_right = average_speed - average_slip_x
+        speed_left = average_speed
+    else:
+        speed_right = average_speed
+        speed_left = average_speed + average_slip_x
+
+    # print(f"average_slip_x: {average_slip_x:.2f}, average_speed: {average_speed:.2f}, speed_left: {speed_left:.2f}, speed_right: {speed_right:.2f}")
+
 
     # Draw speedometers
-    draw_speedometer(frame, round(display_width / 4), average_speed)
-    draw_speedometer(frame, round(display_width / 4 + display_width / 2), average_speed)
+    draw_speedometer(frame, round(display_width / 4), speed_left)
+    draw_speedometer(frame, round(display_width / 4 + display_width / 2), speed_right)
 
     # Display the frame
     cv2.imshow("Detection", frame)
