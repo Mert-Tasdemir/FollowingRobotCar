@@ -10,7 +10,21 @@ import libs.calculator as calculator
 # Constants
 MIN_CONFIDENCE = 0.54
 
-def initialize_camera():
+def initialize_camera_logi():
+    """Initializes and configures the webcam."""
+    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+    cap.set(cv2.CAP_PROP_BRIGHTNESS, 155)
+    cap.set(cv2.CAP_PROP_CONTRAST, 158)
+    cap.set(cv2.CAP_PROP_HUE, 0)
+    cap.set(cv2.CAP_PROP_SATURATION, 126)
+    cap.set(cv2.CAP_PROP_GAMMA, 125)
+    cap.set(cv2.CAP_PROP_EXPOSURE, -4)
+    cap.set(cv2.CAP_PROP_SETTINGS, 1)
+    cap.set(cv2.CAP_PROP_GAIN, 177)
+    return cap
+
+
+def initialize_camera_work():
     """Initializes and configures the webcam."""
     cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
     cap.set(cv2.CAP_PROP_BRIGHTNESS, -3)
@@ -27,7 +41,7 @@ model = YOLO("./yolo11_custom2.pt")
 print(settings)
 
 # Initialize camera
-cap = initialize_camera()
+cap = initialize_camera_logi()
 
 # Speed tracking variables
 speeds = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
