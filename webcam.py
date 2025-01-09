@@ -63,7 +63,7 @@ cap.set(cv2.CAP_PROP_CONTRAST, 6)
 cap.set(cv2.CAP_PROP_HUE, 0)
 cap.set(cv2.CAP_PROP_SATURATION, 15)
 cap.set(cv2.CAP_PROP_GAMMA, 125)
-cap.set(cv2.CAP_PROP_EXPOSURE, -5)
+cap.set(cv2.CAP_PROP_EXPOSURE, -6)
 cap.set(cv2.CAP_PROP_SETTINGS, 1)
 
 rightSpeed = 0
@@ -108,6 +108,7 @@ while True:
         raw_speed = object_width / display_width
         speed = max(raw_speed - MIN_OBJECT, 0.0)
         speed = min(speed * SCOPE_OBJECT, 1.0)
+        speed = speed * speed
         print(f"raw_speed: {raw_speed:.3f}, speed: {speed:.3f}")
 
     if not is_detected:
