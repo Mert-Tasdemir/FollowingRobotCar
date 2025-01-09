@@ -69,12 +69,15 @@ def draw_speedometer(img, x, speed):
     cv2.line(img, center, (needle_x, needle_y), (0, 0, 255), 3)
 
     # Draw speed value
-    speed_value = str(int(speed))
-    # speed_value = str(round(float(speed), 0))
-    text_size = cv2.getTextSize(speed_value, cv2.FONT_HERSHEY_SIMPLEX, 1.0, 2)[0]
-    text_x = center[0] - text_size[0] // 2
-    text_y = center[1] + radius // 2 + text_size[1]
-    cv2.putText(img, speed_value, (text_x, text_y), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (240, 240, 240), 2)    
+    if speed > 0.0:
+        grey = int(255*(speed/MAX_SPEED))
+        red  = int(255*(1-speed/MAX_SPEED))
+        color = (grey, grey, red+grey)
+        speed_value = str(int(speed))
+        text_size = cv2.getTextSize(speed_value, cv2.FONT_HERSHEY_SIMPLEX, 1.0, 2)[0]
+        text_x = center[0] - text_size[0] // 2
+        text_y = center[1] + radius // 2 + text_size[1]
+        cv2.putText(img, speed_value, (text_x, text_y), cv2.FONT_HERSHEY_SIMPLEX, 1.0, color, 2)    
 
 def initialize_camera():
     """Initializes and configures the webcam."""
