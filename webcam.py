@@ -14,8 +14,8 @@ MAX_TARGET = 0.30
 MIN_TARGET = 0.08
 SCOPE_TARGET = 1.0 / (MAX_TARGET - MIN_TARGET)
 
-MIN_SLIP_X = -0.92
-MAX_SLIP_X = 0.92
+DSLIP_X = 0.90
+SCOPE_SLIP_X = 1.0 / DSLIP_X
 
 
 def draw_target(target_size):
@@ -153,7 +153,13 @@ def calculate_slip_x(target_size, display_width):
     x1, _, x2, _ = target_size
     display_center_x = display_width / 2
     target_slip_x = x1 + (x2 - x1) / 2
-    slip_x = (target_slip_x - display_center_x) / display_center_x
+    raw_slip_x = (target_slip_x - display_center_x) / display_center_x
+    if raw_slip_x > 0.0:
+        slip_x = min(raw_slip_x * SCOPE_SLIP_X, 1.0)
+        slip_x = slip_x * slip_x
+    else:
+        slip_x = max(raw_slip_x * SCOPE_SLIP_X, -1.0)
+        slip_x = -1 * slip_x * slip_x
     return slip_x
 
 def update_average_speed(speeds, speed):
@@ -164,7 +170,7 @@ def update_average_speed(speeds, speed):
     return sum(speeds) / len(speeds)
 
 def update_average_slip_x(slips, slip_x):
-    """Updates the rolling average speed."""
+    """Updates the rolling average slip_x."""
     if len(slips) > STACK_LEN:
         slips.pop(0)
     slips.append(slip_x)
@@ -205,6 +211,7 @@ while True:
 
         speed = calculate_speed((x1, y1, x2, y2), display_width)
         slip_x = calculate_slip_x((x1, y1, x2, y2), display_width)
+
         # Draw target overlay using a rectangular frame
         draw_target((x1, y1, x2, y2))
 
