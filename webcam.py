@@ -34,8 +34,15 @@ def initialize_camera_work():
     return cap
 
 # Load YOLO model
-model = YOLO("./yolo11n.pt")
-print(settings)
+#model = YOLO("./yolo11n.pt")
+#print(settings)
+
+# Export the model to NCNN format
+#model.export(format="ncnn")  # creates 'yolo11n_ncnn_model'
+
+# Load the exported NCNN model
+model = YOLO("yolo11n_ncnn_model")
+
 
 # Initialize camera
 cap = initialize_camera_logi()
