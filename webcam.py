@@ -15,7 +15,7 @@ SCOPE_OBJECT = 1.0 / (MAX_OBJECT - MIN_OBJECT)
 
 def draw_speedometer(img, x, speed):
     """
-    Draws a speedometer on the image.
+    Draws a speedometer on the image with a blurred dark background.
 
     Args:
         img: Input image.
@@ -30,6 +30,19 @@ def draw_speedometer(img, x, speed):
     d_width = 1.45
 
     speed = (1.0 - speed) * MAX_SPEED
+
+    # Create a mask for the blurred background circle
+    mask = np.zeros_like(img, dtype=np.uint8)
+    bg_radius = radius + 20
+    cv2.circle(mask, center, bg_radius, (255, 255, 255), -1)
+
+    # Apply the blur and darken only inside the mask
+    overlay = img.copy()
+    cv2.circle(overlay, center, bg_radius, (0, 0, 0), -1)
+    alpha = 0.2  # Transparency factor for darkening
+    blended = cv2.addWeighted(overlay, alpha, img, 1 - alpha, 0)
+    blurred_overlay = cv2.GaussianBlur(blended, (10, 10), 0)
+    img[mask[:, :, 0] == 255] = blurred_overlay[mask[:, :, 0] == 255]
 
     # Draw circle
     cv2.circle(img, center, radius, (255, 255, 255), line_width)
