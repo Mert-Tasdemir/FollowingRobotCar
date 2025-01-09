@@ -8,15 +8,18 @@ from PIL import ImageFont, ImageDraw, Image
 # Constants
 MIN_CONFIDENCE = 0.54
 MAX_SPEED = 100.0
-MAX_SPEEDS_LEN = 10
+STACK_LEN = 10
 
-MAX_OBJECT = 0.30
-MIN_OBJECT = 0.08
-SCOPE_OBJECT = 1.0 / (MAX_OBJECT - MIN_OBJECT)
+MAX_TARGET = 0.30
+MIN_TARGET = 0.08
+SCOPE_TARGET = 1.0 / (MAX_TARGET - MIN_TARGET)
+
+MIN_SLIP_X = -0.92
+MAX_SLIP_X = 0.92
 
 
-def draw_target(size):
-    x1, y1, x2, y2 = size
+def draw_target(target_size):
+    x1, y1, x2, y2 = target_size
     if confidence < MIN_CONFIDENCE * 1.4:
         target_color = (0, 0, 255)
     else:
@@ -137,21 +140,35 @@ def get_highest_confidence_box(boxes):
             index = i
     return index, highest_confidence
 
-def calculate_speed(box, display_width):
+def calculate_speed(target_size, display_width):
     """Calculates the speed based on the bounding box size."""
-    x1, _, x2, _ = box.xyxy[0]
-    object_width = x2 - x1
-    raw_speed = object_width / display_width
-    speed = max(raw_speed - MIN_OBJECT, 0.0)
-    speed = min(speed * SCOPE_OBJECT, 1.0)
+    x1, _, x2, _ = target_size
+    target_width = x2 - x1
+    raw_speed = target_width / display_width
+    speed = max(raw_speed - MIN_TARGET, 0.0)
+    speed = min(speed * SCOPE_TARGET, 1.0)
     return speed * speed
+
+def calculate_slip_x(target_size, display_width):
+    x1, _, x2, _ = target_size
+    display_center_x = display_width / 2
+    target_slip_x = x1 + (x2 - x1) / 2
+    slip_x = (target_slip_x - display_center_x) / display_center_x
+    return slip_x
 
 def update_average_speed(speeds, speed):
     """Updates the rolling average speed."""
-    if len(speeds) > MAX_SPEEDS_LEN:
+    if len(speeds) > STACK_LEN:
         speeds.pop(0)
     speeds.append(speed)
     return sum(speeds) / len(speeds)
+
+def update_average_slip_x(slips, slip_x):
+    """Updates the rolling average speed."""
+    if len(slips) > STACK_LEN:
+        slips.pop(0)
+    slips.append(slip_x)
+    return sum(slips) / len(slips)
 
 # Load YOLO model
 model = YOLO("./yolo11_custom2.pt")
@@ -161,7 +178,8 @@ print(settings)
 cap = initialize_camera()
 
 # Speed tracking variables
-speeds = []
+speeds = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+slips = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
 while True:
     ret, frame = cap.read()
@@ -169,7 +187,7 @@ while True:
         print("Failed to grab frame")
         break
 
-    display_height, display_width, _ = frame.shape
+    _, display_width, _ = frame.shape
 
     # Perform detection
     result = model.predict(source=frame, verbose=False)[0]
@@ -180,18 +198,25 @@ while True:
     is_detected = index > -1 and confidence >= MIN_CONFIDENCE
 
     speed = 0.0
+    slip_x = 0.0
     if is_detected:
         box = boxes[index]
-        speed = calculate_speed(box, display_width)
+        x1, y1, x2, y2 = map(int, box.xyxy[0])
 
+        speed = calculate_speed((x1, y1, x2, y2), display_width)
+        slip_x = calculate_slip_x((x1, y1, x2, y2), display_width)
         # Draw target overlay using a rectangular frame
-        draw_target(map(int, box.xyxy[0]))
+        draw_target((x1, y1, x2, y2))
 
     if not is_detected:
         speed = 1.0
 
     # Update average speed
     average_speed = update_average_speed(speeds, speed)
+
+    # Update average slip_x
+    average_slip_x = update_average_slip_x(slips, slip_x)
+    print(f"average_slip_x: {average_slip_x}")        
 
     # Draw speedometers
     draw_speedometer(frame, round(display_width / 4), average_speed)
