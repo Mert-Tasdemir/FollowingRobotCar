@@ -2,12 +2,10 @@ import cv2
 import numpy as np
 import math
 
-def draw_target(frame, target_size, confidence, min_confidence):
+MAX_SPEED = 100.0
+
+def draw_target(frame, target_size, target_color):
     x1, y1, x2, y2 = target_size
-    if confidence < min_confidence * 1.4:
-        target_color = (0, 0, 255)
-    else:
-        target_color = (0, 255, 0)
     line_thickness = 2
 
     # Create an overlay for transparency
@@ -25,7 +23,6 @@ def draw_target(frame, target_size, confidence, min_confidence):
     cv2.line(frame, (x2, y2), (x2 - corner, y2), target_color, line_thickness)
     cv2.line(frame, (x2, y2), (x2, y2 - corner), target_color, line_thickness)
 
-
     # Draw crosshair lines
     cx, cy = (x1 + x2) // 2, (y1 + y2) // 2
     crosshair_length = min(x2 - x1, y2 - y1) // 4
@@ -36,15 +33,14 @@ def draw_target(frame, target_size, confidence, min_confidence):
     alpha = 0.2
     cv2.addWeighted(overlay, alpha, frame, 1 - alpha, 0, frame)
 
-
-def draw_speedometer(img, x, average_speed, max_speed):
+def draw_speedometer(img, x, average_speed):
     """
     Draws a speedometer on the image with a blurred dark background.
 
     Args:
         img: Input image.
         x: X-coordinate for the speedometer center.
-        speed: Current speed (0-max_speed).
+        speed: Current speed (0-MAX_SPEED).
     """
     height, width, _ = img.shape
     line_width = 2
@@ -53,7 +49,7 @@ def draw_speedometer(img, x, average_speed, max_speed):
     d_angle = -2.45
     d_width = 1.45
 
-    speed = average_speed * max_speed
+    speed = average_speed * MAX_SPEED
 
     # Create a mask for the blurred background circle
     mask = np.zeros_like(img, dtype=np.uint8)
@@ -73,7 +69,7 @@ def draw_speedometer(img, x, average_speed, max_speed):
 
     # Draw scale markings
     for i in range(0, 101, 10):
-        angle = d_angle * math.pi / 2 + (math.pi * i / max_speed * d_width)
+        angle = d_angle * math.pi / 2 + (math.pi * i / MAX_SPEED * d_width)
         x1 = int(center[0] + radius * math.cos(angle))
         y1 = int(center[1] + radius * math.sin(angle))
         x2 = int(center[0] + (radius - 10) * math.cos(angle))
@@ -86,7 +82,7 @@ def draw_speedometer(img, x, average_speed, max_speed):
         cv2.putText(img, str(i), (label_x - 10, label_y + 5), cv2.FONT_HERSHEY_SIMPLEX, 0.37, (255, 255, 255), 1)
 
     # Draw needle
-    needle_angle = d_angle * math.pi / 2 + (math.pi * speed / max_speed * d_width)
+    needle_angle = d_angle * math.pi / 2 + (math.pi * speed / MAX_SPEED * d_width)
     needle_x = int(center[0] + (radius - 20) * math.cos(needle_angle))
     needle_y = int(center[1] + (radius - 20) * math.sin(needle_angle))
     cv2.line(img, center, (needle_x, needle_y), (0, 0, 255), 3)
