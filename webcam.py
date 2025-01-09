@@ -23,6 +23,8 @@ def draw_speedometer(img, x, speed):
     d_angle = -2.45
     d_width = 1.45
 
+    speed = (1.0 - speed) * MAX_SPEED
+
     # Нарисовать круг
     cv2.circle(img, center, radius, (255, 255, 255), line_width)
 
@@ -53,10 +55,10 @@ print(settings)
 # Open webcam
 cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
 cap.set(cv2.CAP_PROP_BRIGHTNESS, -3)
-cap.set(cv2.CAP_PROP_CONTRAST, 20)
+cap.set(cv2.CAP_PROP_CONTRAST, 6)
 cap.set(cv2.CAP_PROP_HUE, 0)
 cap.set(cv2.CAP_PROP_SATURATION, 15)
-cap.set(cv2.CAP_PROP_GAMMA, 143)
+cap.set(cv2.CAP_PROP_GAMMA, 125)
 cap.set(cv2.CAP_PROP_EXPOSURE, -5)
 cap.set(cv2.CAP_PROP_SETTINGS, 1)
 
@@ -75,29 +77,28 @@ while True:
     display_height, display_width, _ = frame.shape
 
     # Perform detection on the current frame
-    results = model.predict(source=frame, verbose=False)
-    result = results[0]
+    result = model.predict(source=frame, verbose=False)[0]
 
-    boxes = result.boxes
-    if len(boxes) == 0:
-        speed = 100.0
-    else:
-        speed = 0.0
+    speed = 0.0
+    confidence = 0.0
+
+    boxes = result.boxes    
     for box in boxes:
-        # Get the bounding box coordinates
-        x1, y1, x2, y2 = box.xyxy[0].tolist()
-        label = box.cls[0]  # Class ID (index)
-        confidence = box.conf[0]  # Confidence score
+        confidence = box.conf[0]
 
         if confidence >= MIN_CONFIDENCE:
+            x1, y1, x2, y2 = box.xyxy[0]
+            label = box.cls[0]  # Class ID (index)
             cv2.rectangle(frame, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 2)
 
             # Calculate the area of the bounding box
             object_width = x2 - x1
-            object_height = y2 - y1
 
-            scale = min(object_width / display_width / MAX_SCOPE, 1.0)
-            speed = scale * 100
+            speed = min(object_width / display_width / MAX_SCOPE, 1.0)    
+
+    #if len(boxes) == 0 or confidence < MIN_CONFIDENCE:
+    #    speed = 1.0
+    print(f"speed: {speed}, confidence: {confidence}")
 
     # Определяем среднюю скорость
     average_speed = 0.0
@@ -109,9 +110,7 @@ while True:
         sum_speed = sum_speed + sp
     average_speed = sum_speed / len(speeds)
 
-    print(f"sum_speed: {sum_speed}")
 
-    average_speed = 100.0 - average_speed
     draw_speedometer(frame, round(display_width/4), average_speed)
     draw_speedometer(frame, round(display_width/4 + display_width/2), average_speed)
 
