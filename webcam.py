@@ -14,6 +14,41 @@ MAX_OBJECT = 0.30
 MIN_OBJECT = 0.08
 SCOPE_OBJECT = 1.0 / (MAX_OBJECT - MIN_OBJECT)
 
+
+def draw_target(size):
+    x1, y1, x2, y2 = size
+    if confidence < MIN_CONFIDENCE * 1.4:
+        target_color = (0, 0, 255)
+    else:
+        target_color = (0, 255, 0)
+    line_thickness = 2
+
+    # Create an overlay for transparency
+    overlay = frame.copy()
+
+    # Draw rectangle
+    corner = min(x2 - x1, y2 - y1) // 4
+    cv2.rectangle(overlay, (x1, y1), (x2, y2), target_color, line_thickness // 2)
+    cv2.line(frame, (x1, y1), (x1 + corner, y1), target_color, line_thickness)
+    cv2.line(frame, (x1, y1), (x1, y1 + corner), target_color, line_thickness)
+    cv2.line(frame, (x2, y1), (x2 - corner, y1), target_color, line_thickness)
+    cv2.line(frame, (x2, y1), (x2, y1 + corner), target_color, line_thickness)
+    cv2.line(frame, (x1, y2), (x1 + corner, y2), target_color, line_thickness)
+    cv2.line(frame, (x1, y2), (x1, y2 - corner), target_color, line_thickness)
+    cv2.line(frame, (x2, y2), (x2 - corner, y2), target_color, line_thickness)
+    cv2.line(frame, (x2, y2), (x2, y2 - corner), target_color, line_thickness)
+
+
+    # Draw crosshair lines
+    cx, cy = (x1 + x2) // 2, (y1 + y2) // 2
+    crosshair_length = min(x2 - x1, y2 - y1) // 4
+    cv2.line(frame, (cx - crosshair_length, cy), (cx + crosshair_length, cy), target_color, line_thickness)
+    cv2.line(frame, (cx, cy - crosshair_length), (cx, cy + crosshair_length), target_color, line_thickness)
+
+    # Blend the overlay with the original frame
+    alpha = 0.2
+    cv2.addWeighted(overlay, alpha, frame, 1 - alpha, 0, frame)
+
 def draw_speedometer(img, x, average_speed):
     """
     Draws a speedometer on the image with a blurred dark background.
@@ -148,8 +183,9 @@ while True:
     if is_detected:
         box = boxes[index]
         speed = calculate_speed(box, display_width)
-        x1, y1, x2, y2 = map(int, box.xyxy[0])
-        cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+
+        # Draw target overlay using a rectangular frame
+        draw_target(map(int, box.xyxy[0]))
 
     if not is_detected:
         speed = 1.0
