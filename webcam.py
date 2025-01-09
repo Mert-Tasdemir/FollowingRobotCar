@@ -14,14 +14,14 @@ MAX_OBJECT = 0.30
 MIN_OBJECT = 0.08
 SCOPE_OBJECT = 1.0 / (MAX_OBJECT - MIN_OBJECT)
 
-def draw_speedometer(img, x, speed):
+def draw_speedometer(img, x, average_speed):
     """
     Draws a speedometer on the image with a blurred dark background.
 
     Args:
         img: Input image.
         x: X-coordinate for the speedometer center.
-        speed: Current speed (0-100).
+        speed: Current speed (0-MAX_SPEED).
     """
     height, width, _ = img.shape
     line_width = 2
@@ -30,7 +30,7 @@ def draw_speedometer(img, x, speed):
     d_angle = -2.45
     d_width = 1.45
 
-    speed = (1.0 - speed) * MAX_SPEED
+    speed = (1.0 - average_speed) * MAX_SPEED
 
     # Create a mask for the blurred background circle
     mask = np.zeros_like(img, dtype=np.uint8)
@@ -70,8 +70,8 @@ def draw_speedometer(img, x, speed):
 
     # Draw speed value
     if speed > 0.0:
-        grey = int(255*(speed/MAX_SPEED))
-        red  = int(255*(1-speed/MAX_SPEED))
+        grey = int(255*(1-average_speed))
+        red  = int(255*average_speed)
         color = (grey, grey, red+grey)
         speed_value = str(int(speed))
         text_size = cv2.getTextSize(speed_value, cv2.FONT_HERSHEY_SIMPLEX, 1.0, 2)[0]
