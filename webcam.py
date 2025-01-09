@@ -80,21 +80,29 @@ while True:
     result = model.predict(source=frame, verbose=False)[0]
 
     speed = 0.0
-    confidence = 0.0
-
     boxes = result.boxes    
+
+    # Найти максимальны confidence и индекс box
+    i: int = 0
+    index: int = -1
+    confidence = 0.0
     for box in boxes:
-        confidence = box.conf[0]
+        conf = box.conf[0]
+        if confidence < conf:
+            confidence = conf
+            index = i
+        i = i + 1
+    
+    if index > -1 and confidence >= MIN_CONFIDENCE:    
+        box = boxes[index]
+        x1, y1, x2, y2 = box.xyxy[0]
+        label = box.cls[0]  # Class ID (index)
+        cv2.rectangle(frame, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 2)
 
-        if confidence >= MIN_CONFIDENCE:
-            x1, y1, x2, y2 = box.xyxy[0]
-            label = box.cls[0]  # Class ID (index)
-            cv2.rectangle(frame, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 2)
+        # Calculate the area of the bounding box
+        object_width = x2 - x1
 
-            # Calculate the area of the bounding box
-            object_width = x2 - x1
-
-            speed = min(object_width / display_width / MAX_SCOPE, 1.0)    
+        speed = min(object_width / display_width / MAX_SCOPE, 1.0)    
 
     #if len(boxes) == 0 or confidence < MIN_CONFIDENCE:
     #    speed = 1.0
