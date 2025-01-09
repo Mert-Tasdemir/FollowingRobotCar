@@ -3,7 +3,7 @@ from ultralytics import settings
 import cv2
 
 
-import draws
+import libs.draws as draws
 
 
 # Constants
