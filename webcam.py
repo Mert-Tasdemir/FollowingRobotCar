@@ -5,9 +5,13 @@ import numpy as np
 import math
 
 MIN_CONFIDENCE: float = 0.54
-MAX_SCOPE: float = 0.3
 MAX_SPEED: float = 100.0
 MAX_SPEEDS_LEN: int = 10
+
+MAX_OBJECT: float = 0.30
+MIN_OBJECT: float = 0.08
+SCOPE_OBJECT: float = 1.0 / (MAX_OBJECT - MIN_OBJECT)
+
 
 def draw_speedometer(img, x, speed):
     """
@@ -92,21 +96,22 @@ while True:
             confidence = conf
             index = i
         i = i + 1
+    is_detected = index > -1 and confidence >= MIN_CONFIDENCE
     
-    if index > -1 and confidence >= MIN_CONFIDENCE:    
+    if is_detected:
         box = boxes[index]
         x1, y1, x2, y2 = box.xyxy[0]
         label = box.cls[0]  # Class ID (index)
         cv2.rectangle(frame, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 2)
 
-        # Calculate the area of the bounding box
         object_width = x2 - x1
+        raw_speed = object_width / display_width
+        speed = max(raw_speed - MIN_OBJECT, 0.0)
+        speed = min(speed * SCOPE_OBJECT, 1.0)
+        print(f"raw_speed: {raw_speed:.3f}, speed: {speed:.3f}")
 
-        speed = min(object_width / display_width / MAX_SCOPE, 1.0)    
-
-    #if len(boxes) == 0 or confidence < MIN_CONFIDENCE:
-    #    speed = 1.0
-    print(f"speed: {speed}, confidence: {confidence}")
+    if not is_detected:
+        speed = 1.0
 
     # Определяем среднюю скорость
     average_speed = 0.0
