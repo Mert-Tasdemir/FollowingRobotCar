@@ -43,7 +43,7 @@ while True:
 
      # Run YOLO11 inference on the frame
     #results = model(frame)
-    results = model.predict(source=frame, verbose=False)
+    results = model.predict(source=frame, verbose=False, conf = MIN_CONFIDENCE)
 
     # Visualize the results on the frame
     result = results[0]
