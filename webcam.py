@@ -45,7 +45,8 @@ model = YOLO("yolo11n_ncnn_model")
 
 
 # Initialize camera
-cap = initialize_camera_logi()
+#cap = initialize_camera_logi()
+cap = initialize_camera_work()
 
 # Speed tracking variables
 speeds = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
@@ -93,11 +94,11 @@ while True:
     average_slip_x = calculator.update_average_slip_x(slips, slip_x)
 
     if average_slip_x > 0.0:
-        speed_right = average_speed - average_slip_x
+        speed_right = max(average_speed - average_slip_x, 0)
         speed_left = average_speed
     else:
         speed_right = average_speed
-        speed_left = average_speed + average_slip_x
+        speed_left = max(average_speed + average_slip_x, 0)
     # print(f"average_slip_x: {average_slip_x:.2f}, average_speed: {average_speed:.2f}, speed_left: {speed_left:.2f}, speed_right: {speed_right:.2f}")
 
     # Draw speedometers
