@@ -1,0 +1,5 @@
+{
+    "terminal.integrated.env.windows": {    
+        "PYTHONPATH": "C:/build-tools/vcpkg/packages/python3_x64-windows/tools/python3"
+    }
+}
