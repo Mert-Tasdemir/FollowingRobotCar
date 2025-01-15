@@ -11,24 +11,26 @@ MIN_CONFIDENCE = 0.54
 DISPLAY_WIDTH = 640
 DISPLAY_HEIGHT = 480
 
+
 def initialize_camera2():
     """Initializes and configures the webcam."""
     picam2 = Picamera2()
     picam2.preview_configuration.main.size = (DISPLAY_WIDTH, DISPLAY_HEIGHT)
     picam2.preview_configuration.main.format = "RGB888"
-    #picam2.preview_configuration.align()
-    #picam2.configure("preview")
+    # picam2.preview_configuration.align()
+    # picam2.configure("preview")
     return picam2
+
 
 cap = initialize_camera2()
 cap.start()
 
 # Load YOLO model
-#model = YOLO("./yolo11n.pt")
-#print(settings)
+# model = YOLO("./yolo11n.pt")
+# print(settings)
 
 # Export the model to NCNN format
-#model.export(format="ncnn")  # creates 'yolo11n_ncnn_model'
+# model.export(format="ncnn")  # creates 'yolo11n_ncnn_model'
 
 # Load the exported NCNN model
 model = YOLO("yolo11n_ncnn_model", task='detect')
@@ -41,21 +43,19 @@ slips = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 while True:
     frame = cap.capture_array()
 
-     # Run YOLO11 inference on the frame
-    #results = model(frame)
-    results = model.predict(source=frame, verbose=False, conf = MIN_CONFIDENCE)
+    # Run YOLO11 inference on the frame
+    # results = model(frame)
+    results = model.predict(source=frame, verbose=False, conf=MIN_CONFIDENCE)
 
     # Visualize the results on the frame
     result = results[0]
-    #frame = result.plot()
+    # frame = result.plot()
 
     _, display_width, _ = frame.shape
 
     # Perform detection
-    #result = model.predict(source=frame, verbose=False)[0]
+    # result = model.predict(source=frame, verbose=False)[0]
     boxes = result.boxes
-
-
 
     # Get highest confidence box
     index, confidence = calculator.get_highest_confidence_box(boxes)
@@ -96,7 +96,8 @@ while True:
 
     # Draw speedometers
     draws.draw_speedometer(frame, round(display_width / 4), speed_left)
-    draws.draw_speedometer(frame, round(display_width / 4 + display_width / 2), speed_right)
+    draws.draw_speedometer(frame, round(
+        display_width / 4 + display_width / 2), speed_right)
 
     # Display the frame
     cv2.imshow("Detection", frame)

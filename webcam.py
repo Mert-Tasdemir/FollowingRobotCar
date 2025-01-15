@@ -7,6 +7,7 @@ import libs.calculator as calculator
 # Constants
 MIN_CONFIDENCE = 0.54
 
+
 def initialize_camera_logi():
     """Initializes and configures the webcam."""
     cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
@@ -19,6 +20,7 @@ def initialize_camera_logi():
     cap.set(cv2.CAP_PROP_SETTINGS, 1)
     cap.set(cv2.CAP_PROP_GAIN, 177)
     return cap
+
 
 def initialize_camera_work():
     """Initializes and configures the webcam."""
@@ -33,18 +35,19 @@ def initialize_camera_work():
     return cap
 
 # Load YOLO model
-#model = YOLO("./yolo11n.pt")
-#print(settings)
+# model = YOLO("./yolo11n.pt")
+# print(settings)
 
 # Export the model to NCNN format
-#model.export(format="ncnn")  # creates 'yolo11n_ncnn_model'
+# model.export(format="ncnn")  # creates 'yolo11n_ncnn_model'
+
 
 # Load the exported NCNN model
 model = YOLO("yolo11n_ncnn_model", task='detect')
 
 
 # Initialize camera
-#cap = initialize_camera_logi()
+# cap = initialize_camera_logi()
 cap = initialize_camera_work()
 
 # Speed tracking variables
@@ -102,7 +105,8 @@ while True:
 
     # Draw speedometers
     draws.draw_speedometer(frame, round(display_width / 4), speed_left)
-    draws.draw_speedometer(frame, round(display_width / 4 + display_width / 2), speed_right)
+    draws.draw_speedometer(frame, round(
+        display_width / 4 + display_width / 2), speed_right)
 
     # Display the frame
     cv2.imshow("Detection", frame)
