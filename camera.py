@@ -31,7 +31,7 @@ cap.start()
 #model.export(format="ncnn")  # creates 'yolo11n_ncnn_model'
 
 # Load the exported NCNN model
-model = YOLO("yolo11n_ncnn_model")
+model = YOLO("yolo11n_ncnn_model", task='detect')
 
 
 # Speed tracking variables
