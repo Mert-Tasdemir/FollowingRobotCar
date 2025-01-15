@@ -20,7 +20,6 @@ def initialize_camera_logi():
     cap.set(cv2.CAP_PROP_GAIN, 177)
     return cap
 
-
 def initialize_camera_work():
     """Initializes and configures the webcam."""
     cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
@@ -41,7 +40,7 @@ def initialize_camera_work():
 #model.export(format="ncnn")  # creates 'yolo11n_ncnn_model'
 
 # Load the exported NCNN model
-model = YOLO("yolo11n_ncnn_model")
+model = YOLO("yolo11n_ncnn_model", task='detect')
 
 
 # Initialize camera
@@ -49,8 +48,8 @@ model = YOLO("yolo11n_ncnn_model")
 cap = initialize_camera_work()
 
 # Speed tracking variables
-speeds = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-slips = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+speeds = []
+slips = []
 
 while True:
     ret, frame = cap.read()
@@ -61,7 +60,7 @@ while True:
     _, display_width, _ = frame.shape
 
     # Perform detection
-    result = model.predict(source=frame, verbose=False)[0]
+    result = model.predict(source=frame, verbose=False, conf=MIN_CONFIDENCE)[0]
     boxes = result.boxes
 
     # Get highest confidence box
