@@ -21,6 +21,17 @@ def initialize_camera_logi():
     cap.set(cv2.CAP_PROP_GAIN, 177)
     return cap
 
+def initialize_camera_notebook():
+    """Initializes and configures the webcam."""
+    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+    cap.set(cv2.CAP_PROP_BRIGHTNESS, 224)
+    cap.set(cv2.CAP_PROP_CONTRAST, 200)
+    cap.set(cv2.CAP_PROP_HUE, 0)
+    cap.set(cv2.CAP_PROP_SATURATION, 64)
+    cap.set(cv2.CAP_PROP_GAMMA, 125)
+    cap.set(cv2.CAP_PROP_EXPOSURE, -3)
+    cap.set(cv2.CAP_PROP_SETTINGS, 1)
+    return cap
 
 def initialize_camera_work():
     """Initializes and configures the webcam."""
@@ -47,7 +58,7 @@ model = YOLO("yolo11n_ncnn_model", task='detect')
 
 
 # Initialize camera
-cap = initialize_camera_logi()
+cap = initialize_camera_notebook()
 # cap = initialize_camera_work()
 
 # Speed tracking variables
