@@ -47,8 +47,8 @@ model = YOLO("yolo11n_ncnn_model", task='detect')
 
 
 # Initialize camera
-# cap = initialize_camera_logi()
-cap = initialize_camera_work()
+cap = initialize_camera_logi()
+# cap = initialize_camera_work()
 
 # Speed tracking variables
 speeds = []
