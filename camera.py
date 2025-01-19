@@ -35,10 +35,9 @@ cap.start()
 # Load the exported NCNN model
 model = YOLO("yolo11n_ncnn_model", task='detect')
 
-
 # Speed tracking variables
-speeds = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-slips = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+speeds = []
+slips = []
 
 while True:
     frame = cap.capture_array()
