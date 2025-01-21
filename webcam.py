@@ -36,11 +36,11 @@ def initialize_camera_notebook():
 def initialize_camera_work():
     """Initializes and configures the webcam."""
     cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
-    cap.set(cv2.CAP_PROP_BRIGHTNESS, -3)
-    cap.set(cv2.CAP_PROP_CONTRAST, 6)
+    cap.set(cv2.CAP_PROP_BRIGHTNESS, 2)
+    cap.set(cv2.CAP_PROP_CONTRAST, 19)
     cap.set(cv2.CAP_PROP_HUE, 0)
     cap.set(cv2.CAP_PROP_SATURATION, 15)
-    cap.set(cv2.CAP_PROP_GAMMA, 125)
+    cap.set(cv2.CAP_PROP_GAMMA, 174)
     cap.set(cv2.CAP_PROP_EXPOSURE, -6)
     cap.set(cv2.CAP_PROP_SETTINGS, 1)
     return cap
@@ -54,7 +54,7 @@ def initialize_camera_work():
 
 
 # Load the exported NCNN model
-model = YOLO("ncnn_model", task='detect')
+model = YOLO("yolo11_ncnn_model", task='detect')
 
 
 # Initialize camera
