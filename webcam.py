@@ -3,6 +3,7 @@ from ultralytics import settings
 import cv2
 import libs.draws as draws
 import libs.calculator as calculator
+import os
 
 # Constants
 MIN_CONFIDENCE = 0.54
@@ -21,6 +22,7 @@ def initialize_camera_logi():
     cap.set(cv2.CAP_PROP_GAIN, 177)
     return cap
 
+
 def initialize_camera_notebook():
     """Initializes and configures the webcam."""
     cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
@@ -33,28 +35,31 @@ def initialize_camera_notebook():
     cap.set(cv2.CAP_PROP_SETTINGS, 1)
     return cap
 
+
 def initialize_camera_work():
     """Initializes and configures the webcam."""
     cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
-    cap.set(cv2.CAP_PROP_BRIGHTNESS, 2)
-    cap.set(cv2.CAP_PROP_CONTRAST, 19)
+    cap.set(cv2.CAP_PROP_BRIGHTNESS, -2)
+    cap.set(cv2.CAP_PROP_CONTRAST, 11)
     cap.set(cv2.CAP_PROP_HUE, 0)
-    cap.set(cv2.CAP_PROP_SATURATION, 15)
-    cap.set(cv2.CAP_PROP_GAMMA, 174)
+    cap.set(cv2.CAP_PROP_SATURATION, 8)
+    cap.set(cv2.CAP_PROP_GAMMA, 146)
     cap.set(cv2.CAP_PROP_EXPOSURE, -6)
     cap.set(cv2.CAP_PROP_SETTINGS, 1)
     return cap
 
+
 # Load YOLO model
 # model = YOLO("./yolo11n.pt")
-# print(settings)
+settings.update({"runs_dir": os.getcwd()})
+print(settings)
 
 # Export the model to NCNN format
 # model.export(format="ncnn")  # creates 'yolo11n_ncnn_model'
 
 
 # Load the exported NCNN model
-model = YOLO("yolo11_ncnn_model", task='detect')
+model = YOLO(os.getcwd() + "/yolo11_ncnn_model", task='detect')
 
 
 # Initialize camera

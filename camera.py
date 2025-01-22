@@ -3,6 +3,7 @@ from ultralytics import settings
 import cv2
 import libs.draws as draws
 import libs.calculator as calculator
+import os
 from picamera2 import Picamera2
 
 # Constants
@@ -33,7 +34,7 @@ cap.start()
 # model.export(format="ncnn")  # creates 'yolo11n_ncnn_model'
 
 # Load the exported NCNN model
-model = YOLO("yolo11n_ncnn_model", task='detect')
+model = YOLO(os.getcwd() + "/yolo11_ncnn_model", task='detect')
 
 # Speed tracking variables
 speeds = []
