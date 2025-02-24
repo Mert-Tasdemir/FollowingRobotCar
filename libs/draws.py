@@ -59,11 +59,12 @@ def draw_speedometer(img, x, average_speed):
     # Apply the blur and darken only inside the mask
     overlay = img.copy()
     cv2.circle(overlay, center, bg_radius, (0, 0, 0), -1)
+    """
     alpha = 0.2  # Transparency factor for darkening
     blended = cv2.addWeighted(overlay, alpha, img, 1 - alpha, 0)
     blurred_overlay = cv2.GaussianBlur(blended, (7, 7), 0)
     img[mask[:, :, 0] == 255] = blurred_overlay[mask[:, :, 0] == 255]
-
+    """
     # Draw circle
     cv2.circle(img, center, radius, (255, 255, 255), line_width)
 
