@@ -3,15 +3,17 @@ from ultralytics import settings
 import cv2
 import numpy as np
 import RPi.GPIO as GPIO
+from picamera2 import Picamera2
+import os
 
 # Define motor control pins (Raspberry Pi GPIO pins)
-LEFT_IN1 = 23  # Left motor direction pin 1 (connect to IN1 on L298N)
-LEFT_IN2 = 24  # Left motor direction pin 2 (connect to IN2 on L298N)
-EN_A = 25      # Left motor speed control (PWM) (connect to ENA on L298N)
+LEFT_IN1 = 24  
+LEFT_IN2 = 23  
+EN_A = 25      
 
-RIGHT_IN3 = 22  # Right motor direction pin 1 (connect to IN3 on L298N)
-RIGHT_IN4 = 27  # Right motor direction pin 2 (connect to IN4 on L298N)
-EN_B = 17       # Right motor speed control (PWM) (connect to ENB on L298N)
+RIGHT_IN3 = 22 
+RIGHT_IN4 = 27 
+EN_B = 17      
 
 # Initialize GPIO
 GPIO.setmode(GPIO.BCM)  # Use Broadcom pin numbering
@@ -33,17 +35,53 @@ LEFT_PWM.start(0)  # Start with 0% duty cycle
 RIGHT_PWM.start(0)
 
 # Load the YOLOv11 model (change the path to your specific model path)
-model = YOLO("./yolo11_custom2.pt")
-settings.update({"runs_dir": "/home/mert/sources/FollowingRobotCar"})
+#model = YOLO("./yolo11_custom2.pt")
+#settings.update({"runs_dir": "/home/mert/sources/FollowingRobotCar"})
+
+# Load the exported NCNN model
+model = YOLO(os.getcwd() + "/yolo11_ncnn_model", task='detect')
 
 print(settings)
 
 # Open webcam
-cap = cv2.VideoCapture(0)  # '0' for the default webcam
+#cap = cv2.VideoCapture(0)  # '0' for the default webcam
 
 # Get the width and height of the frame
-frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+frame_width = 640 #int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+frame_height = 480 #int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+
+def initialize_camera2():
+    """Initializes and configures the webcam."""
+    picam2 = Picamera2()
+    picam2.preview_configuration.main.size = (frame_width, frame_height)
+    picam2.preview_configuration.main.format = "RGB888"
+    # picam2.preview_configuration.align()
+    # picam2.configure("preview")
+    return picam2
+
+cap = initialize_camera2()
+cap.start()
+
+"""
+def initialize_camera2():
+    #Initializes and configures the Raspberry Pi camera.
+    picam2 = Picamera2()
+    
+    # Get default camera resolution
+    camera_info = picam2.sensor_modes[0]  # First available mode
+    frame_width, frame_height = camera_info["size"]
+
+    # Configure camera
+    picam2.preview_configuration.main.size = (frame_width, frame_height)
+    picam2.preview_configuration.main.format = "RGB888"
+    picam2.configure("preview")
+
+    return picam2, frame_width, frame_height
+
+cap, frame_width, frame_height = initialize_camera2()
+cap.start()
+"""
+
 frame_centerX=frame_width/2
 frame_centerY=frame_height/2
 left_thresholdX = frame_centerX - 50
@@ -60,14 +98,17 @@ MIN_SPEED=0
 MAX_DIRECTION_SPEED=25
 MIN_WIDTH=50
 
+
+
 left_limitX = 125
 right_limitX = frame_width - 125
 
-left_speeds = [0] * 10
-right_speeds = [0] * 10
+left_speeds = [0] * 3
+right_speeds = [0] * 3
 i=0
 calculated_leftSpeed=0
 calculated_rightSpeed=0
+
 
 class Motors:
     
@@ -194,17 +235,21 @@ class Draw:
         cv2.circle(frame, (int(left_thresholdX), int(frame_centerY)), 5, (0, 255, 220), -1)
         cv2.circle(frame, (int(right_thresholdX), int(frame_centerY)), 5, (0, 255, 220), -1)
 
+
 try:
     while True:
         # Capture a frame from the webcam
-        ret, frame = cap.read()
+        #ret, frame = cap.read()
         
-        if not ret:
-            print("Failed to grab frame")
-            break
+        frame = cap.capture_array()
+        
+        #if not ret:
+        #    print("Failed to grab frame")
+        #    break
 
         # Perform detection on the current frame
-        results = model(frame)
+        #results = model(frame)
+        results = model.predict(source=frame, verbose=False, conf=MIN_CONFIDENCE)
 
         # Access the first result (since it's returned as a list of results)
         result = results[0]
@@ -284,7 +329,7 @@ try:
         cv2.putText(frame, right_speeds_text, (10, 70), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
           
         # Display the frame with bounding boxes and labels
-        cv2.imshow("Detection", frame)
+        #cv2.imshow("Detection", frame)
 
         # Exit the loop if 'q' is pressed
         if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -292,5 +337,5 @@ try:
 finally:
     print("Cleaning up GPIO...")
     GPIO.cleanup()
-    cap.release()
+    #cap.release()
     cv2.destroyAllWindows()

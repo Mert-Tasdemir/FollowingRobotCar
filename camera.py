@@ -5,6 +5,7 @@ import libs.draws as draws
 import libs.calculator as calculator
 import os
 from picamera2 import Picamera2
+import RPi.GPIO as GPIO
 
 # Constants
 MIN_CONFIDENCE = 0.54
@@ -23,8 +24,68 @@ def initialize_camera2():
     return picam2
 
 
+class Motors:
+    
+    def set_motor_speed(calculated_leftSpeed, calculated_rightSpeed):
+        
+        calculated_leftSpeed=max(0, min(100, calculated_leftSpeed))
+        calculated_rightSpeed=max(0, min(100, calculated_rightSpeed))
+        
+        #left motor
+        if calculated_leftSpeed>0:
+            GPIO.output(LEFT_IN1, GPIO.HIGH)
+            GPIO.output(LEFT_IN2, GPIO.LOW)
+        else:
+            GPIO.output(LEFT_IN1, GPIO.LOW)
+            GPIO.output(LEFT_IN2, GPIO.LOW)
+        #right motor
+        if calculated_rightSpeed>0:
+            GPIO.output(RIGHT_IN3, GPIO.HIGH)
+            GPIO.output(RIGHT_IN4, GPIO.LOW)
+        else:
+            GPIO.output(RIGHT_IN3, GPIO.LOW)
+            GPIO.output(RIGHT_IN4, GPIO.LOW)
+        
+        
+        #GPIO.output(LEFT_IN1, GPIO.HIGH if calculated_leftSpeed > 0 else GPIO.LOW)
+        #GPIO.output(LEFT_IN2, GPIO.LOW)
+
+        #GPIO.output(RIGHT_IN3, GPIO.HIGH if calculated_rightSpeed > 0 else GPIO.LOW)
+        #GPIO.output(RIGHT_IN4, GPIO.LOW)
+        
+        LEFT_PWM.ChangeDutyCycle(calculated_leftSpeed)
+        RIGHT_PWM.ChangeDutyCycle(calculated_rightSpeed)
+
 cap = initialize_camera2()
 cap.start()
+
+# Define motor control pins (Raspberry Pi GPIO pins)
+LEFT_IN1 = 24  
+LEFT_IN2 = 23  
+EN_A = 25      
+
+RIGHT_IN3 = 22 
+RIGHT_IN4 = 27 
+EN_B = 17      
+
+# Initialize GPIO
+GPIO.setmode(GPIO.BCM)  # Use Broadcom pin numbering
+
+# Set motor control pins as outputs
+GPIO.setup(LEFT_IN1, GPIO.OUT)
+GPIO.setup(LEFT_IN2, GPIO.OUT)
+GPIO.setup(EN_A, GPIO.OUT)
+
+GPIO.setup(RIGHT_IN3, GPIO.OUT)
+GPIO.setup(RIGHT_IN4, GPIO.OUT)
+GPIO.setup(EN_B, GPIO.OUT)
+
+# Set up PWM for speed control
+LEFT_PWM = GPIO.PWM(EN_A, 100)  # 100 Hz PWM frequency
+RIGHT_PWM = GPIO.PWM(EN_B, 100)
+
+LEFT_PWM.start(0)  # Start with 0% duty cycle
+RIGHT_PWM.start(0)
 
 # Load YOLO model
 # model = YOLO("./yolo11n.pt")
@@ -98,6 +159,9 @@ while True:
     draws.draw_speedometer(frame, round(display_width / 4), speed_left)
     draws.draw_speedometer(frame, round(
         display_width / 4 + display_width / 2), speed_right)
+    
+    Motors.set_motor_speed(speed_left*draws.MAX_SPEED, speed_right*draws.MAX_SPEED)
+
 
     # Display the frame
     cv2.imshow("Detection", frame)
@@ -108,3 +172,5 @@ while True:
 
 # Cleanup
 cv2.destroyAllWindows()
+
+Motors.set_motor_speed(0, 0)
