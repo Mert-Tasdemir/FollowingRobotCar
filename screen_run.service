@@ -1,0 +1,16 @@
+[Unit]
+Description=screen run
+After=network-online.target
+Requires=network.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=/home/mert/source/FollowingRobotCar/
+ExecStart=/home/mert/source/FollowingRobotCar/run.sh
+# RestartSec=5
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

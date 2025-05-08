@@ -40,3 +40,17 @@ from ultralytics import YOLO
 
 model = YOLO("yolo11n.pt")
 results = model("tcp://127.0.0.1:8888")
+
+
+sudo chown root:root /etc/systemd/system/screen_run.service
+sudo chmod 777 /etc/systemd/system/screen_run.service
+sudo chown root:root /home/mert/source/FollowingRobotCar/run.sh
+
+sudo systemctl daemon-reload
+sudo systemctl enable screen_run
+sudo systemctl status screen_run
+sudo systemctl start screen_run
+sudo systemctl stop screen_run
+sudo systemctl restart screen_run
+
+which screen
