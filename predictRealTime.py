@@ -4,7 +4,7 @@ import cv2
 
 # Load the YOLOv11 model (change the path to your specific model path)
 model = YOLO("./yolo11_custom2.pt")  # Use double slashes or raw string for Windows paths
-settings.update({"runs_dir": "/home/mert/sources/FollowingRobotCar"})
+settings.update({"runs_dir": "/home/mert/source/FollowingRobotCar"})
 
 print(settings)
 

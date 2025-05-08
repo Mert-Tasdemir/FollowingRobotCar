@@ -10,7 +10,7 @@ from flask_socketio import SocketIO, emit
 import threading
 import time
 
-app = Flask(__name__, template_folder='/home/mert/sources/FollowingRobotCar/templates')
+app = Flask(__name__, template_folder='/home/mert/source/FollowingRobotCar/templates')
 socketio = SocketIO(app)
 
 pursuit_active = False
@@ -46,13 +46,13 @@ RIGHT_PWM.start(0)
 
 # Load the YOLOv11 model (change the path to your specific model path)
 #model = YOLO("./yolo11_custom2.pt")
-#settings.update({"runs_dir": "/home/mert/sources/FollowingRobotCar"})
+#settings.update({"runs_dir": "/home/mert/source/FollowingRobotCar"})
 
 # Load the exported NCNN model
 model = YOLO(os.getcwd() + "/yolo11_ncnn_model", task='detect')
 
 results = model.predict(source=None, verbose=False, conf=0) #perform detection on Nothing, to Load the model fully. without this line, when start is clicked in web, it takes long time at 
-#Loading /home/mert/sources/FollowingRobotCar/yolo11_ncnn_model for NCNN inference    line  (gives warning because of: source=None)
+#Loading /home/mert/source/FollowingRobotCar/yolo11_ncnn_model for NCNN inference    line  (gives warning because of: source=None)
 
 print(settings)
 

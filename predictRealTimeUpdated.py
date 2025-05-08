@@ -5,7 +5,7 @@ import numpy as np
 
 # Load the YOLOv11 model (change the path to your specific model path)
 model = YOLO("./yolo11_custom2.pt")
-settings.update({"runs_dir": "/home/mert/sources/FollowingRobotCar"})
+settings.update({"runs_dir": "/home/mert/source/FollowingRobotCar"})
 
 print(settings)
 

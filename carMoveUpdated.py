@@ -36,7 +36,7 @@ RIGHT_PWM.start(0)
 
 # Load the YOLOv11 model (change the path to your specific model path)
 #model = YOLO("./yolo11_custom2.pt")
-#settings.update({"runs_dir": "/home/mert/sources/FollowingRobotCar"})
+#settings.update({"runs_dir": "/home/mert/source/FollowingRobotCar"})
 
 # Load the exported NCNN model
 model = YOLO(os.getcwd() + "/yolo11_ncnn_model", task='detect')
