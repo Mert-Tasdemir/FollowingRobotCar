@@ -500,7 +500,7 @@ try:
                 processed_frame = frame.copy()
             
             # Display the frame with bounding boxes and labels
-            cv2.imshow("Detection", frame)
+            #cv2.imshow("Detection", frame)
 
             # Exit the loop if 'q' is pressed
             if cv2.waitKey(1) & 0xFF == ord('q'):
