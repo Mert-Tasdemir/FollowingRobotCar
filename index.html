@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VALIZZ CONTROL PANEL</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #021418;
+            color: #62dcf4;
+        }
+
+        button {
+            background-color: #021418;
+            color: #62dcf4;
+            border: 2px solid #62dcf4;
+            padding: 15px 30px;
+            margin: 10px;
+            font-size: 18px;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: 0.3s;
+        }
+
+        button:disabled {
+            background-color: #021418 !important;
+            color: #62dcf4 !important;
+            opacity: 0.3;
+            cursor: not-allowed;
+            border: 2px solid #62dcf4 !important;
+        }
+
+        button:hover {
+            background-color: #62dcf4;
+            color: #021418;           
+            border-color: #021418;
+        }
+
+        img, video {
+            margin-top: 20px;
+            width: 200px;
+        }
+        #activateShutdown {
+            width: 25px;
+            height: 25px;
+        }
+        #shutdown_video, #shutdown_image{
+            width: 70px;
+            height: 70px;
+        }
+
+        .small-icon {
+            width: 30px;
+            height: 30px;
+        }
+
+        .wide-slider {
+            width: 300px;
+        }
+    </style>
+</head>
+<body>
+    <video src="{{ url_for('static', filename='VALIZZanimation3.mp4') }}" alt="Smart Suitcase Logo" onclick="this.play()"></video>
+    <h1 style="color: #62dcf4; text-shadow: 0px 0px 12px rgb(0, 217, 255);">VALIZZ</h1>
+    <button id="btn_start" onclick="playSound('start'); fetch('/start')">Start</button>
+    <button id="btn_stop" onclick="playSound('stop'); fetch('/stop')">Stop</button><br>
+
+    
+    <!--<input type="checkbox" id="activateShutdown" onchange="toggleShutdown()">
+    <label for="activateShutdown" style="color: #62dcf4;">Activate Shutdown</label><br>-->
+    <!--<button id="shutdownBtn" onclick="fetch('/shutdown')" disabled>Shutdown</button>-->
+    <div id="shutdown_container">
+        <video id="shutdown_video" src="{{ url_for('static', filename='sphere_lock.mp4') }}" 
+               autoplay loop muted playsinline onclick="playSound('shutdown_video')"></video>
+    </div>
+    <img class="small-icon" id="activateShutdown" src="{{ url_for('static', filename='lock_closed.png') }}" alt="shutdown vector" onclick="toggleShutdown()">
+
+    
+    <br><br>
+
+    
+    Left Speed Coifficient:
+    <img class="small-icon" src="{{ url_for('static', filename='speedometer_vector.png') }}" alt="speedometer" onclick="speedSound.play()">
+    <input type="range" class="wide-slider" id="speed_value_left" value="100" min="0" max="100"  width="500px" oninput="changeValue('speed_value_left','speed_display_left')" onchange="send_speedChange('left')">
+    <output id="speed_display_left">%100</output><br><br>
+
+    Right Speed Coifficient:
+    <img class="small-icon" src="{{ url_for('static', filename='speedometer_vector.png') }}" alt="speedometer" onclick="speedSound.play()">
+    <input type="range" class="wide-slider" id="speed_value_right" value="100" min="0" max="100"  width="500px" oninput="changeValue('speed_value_right','speed_display_right')" onchange="send_speedChange('right')">
+    <output id="speed_display_right">%100</output><br><br><br>
+
+    Speed List Length:<input type="range" class="wide-slider" id="list_len" value="3" min="3" max="20" oninput="changeValue('list_len','list_len_display')" onchange="send_listLenChange()">
+    <output id="list_len_display">3</output><br><br><br>
+
+    Manual Mode:<input type="checkbox" id="manual_mode" onchange="manual()"><br><br>
+    Left Speed:<input type="range"  class="wide-slider" id="left_speed" value="0" min="0" max="100" oninput="changeValue('left_speed','left_speed_display')" onchange="manual()" > 
+    <output id="left_speed_display"></output>
+    <br><br>
+    Right Speed:<input type="range" class="wide-slider" id="right_speed" value="0" min="0" max="100" oninput="changeValue('right_speed','right_speed_display')" onchange="manual()" >
+    <output id="right_speed_display"></output>
+    <br>
+    
+    
+
+    <br><br>
+
+    <img src="{{ url_for('video_feed') }}" width="100%" height="auto" style="max-width: 100%; height: auto;">
+
+    <br><br>
+    <!-- Status Section -->
+    <div id="status" style="font-size: 20px; color: #62dcf4; font-weight: bold;">
+        Status
+    </div>
+
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.3.2/socket.io.min.js"></script>
+    <script>
+        // Connect to the Flask-SocketIO server
+        const socket = io.connect('http://192.168.77.11:5000');
+
+        // When the page loads, request the current status
+        window.onload = () => {
+            socket.emit('get_status');  // Request the current status
+        };
+
+        let Re_found_played = false;
+        let Lost_played = false;
+        Re_found = new Audio('static/soundeffect8.wav');
+        lostSound = new Audio('static/soundeffect5_4times.wav');
+        checkboxClickSound = new Audio('static/clicksound2.wav');
+        speedSound = new Audio('static/soundeffect9.wav');
+        
+        let shutdownActivated=false;
+
+
+        const sounds = {
+            start: new Audio('static/soundeffect6.wav'),
+            stop: new Audio('static/soundeffect7.wav'),
+            shutdown: new Audio('static/shutdown.wav'),
+            shutdown_video: new Audio('static/access_denied_soundeffect.wav'),
+            shutdown_image: new Audio('static/closesound.wav')
+            
+        };
+
+        function playSound(btn) {
+            const sound = sounds[btn];
+            if (sound) {
+                sound.currentTime = 0;
+                sound.play();
+            }
+        }
+
+        function make_videoButton(){
+            // Show video
+            const container = document.getElementById("shutdown_container");
+            const video = document.createElement("video");
+            video.id = "shutdown_video";
+            video.src = "{{ url_for('static', filename='sphere_lock.mp4') }}";
+            video.autoplay = true;
+            video.loop = true;
+            video.muted = true;
+            video.playsInline = true;
+            video.onclick = () => {
+                playSound('shutdown_video');
+            };
+            container.appendChild(video);
+            
+        }
+        
+        function make_imageButton(){
+            // Show image instead of video
+            const container = document.getElementById("shutdown_container");
+            const img = document.createElement("img");
+            img.src = "{{ url_for('static', filename='shutdown2.png') }}";
+            img.alt = "Shutdown Image";
+            img.id = "shutdown_image";
+            img.onclick= ()=>{
+                playSound('shutdown_image');
+                // Delay for 3 seconds (3000 ms) before proceeding
+                setTimeout(() => {
+                    fetch("/shutdown") // Send the fetch request
+                        .then(response => {
+                            if (response.ok) {
+                                console.log("Shutdown request sent successfully");
+                            } else {
+                                console.error("Shutdown request failed");
+                            }
+                        })
+                        .catch(error => {
+                            console.error("Error sending shutdown request:", error);
+                        });
+                }, 3000);  // Delay for 3 seconds
+            };
+            container.appendChild(img);
+            
+        }
+
+        function toggleShutdown() {            
+            checkboxClickSound.play();
+            const container = document.getElementById("shutdown_container");
+            container.innerHTML = "";
+            let activateShutdown = document.getElementById("activateShutdown");
+            if(shutdownActivated){
+                make_videoButton();
+                activateShutdown.src="{{ url_for('static', filename='lock_closed.png') }}";
+            }else{
+                make_imageButton();
+                activateShutdown.src="{{ url_for('static', filename='lock_open.png') }}";
+            }
+            shutdownActivated=!shutdownActivated;
+            /*shutdownBtn.disabled = !shutdownActivated;*/
+        }
+        
+        socket.on('status_update', (data) => {
+            console.log("Received status update:", data); // This will print the data from the server
+            
+            const statusDiv = document.getElementById("status");
+            if (data.message === "System Offline") {
+                statusDiv.innerHTML = "System Offline";
+                Lost_played=false;
+            } else if (data.message === "Target Lost") {
+                    statusDiv.innerHTML = "Target Lost";
+                    statusDiv.style.color = "#FD1C03";
+                    statusDiv.style.textShadow = "0px 0px 5px #FD1C03, 0px 0px 10px #FD1C03";
+                    
+                    if(!Lost_played){
+                        lostSound.play();
+                        Lost_played=true;
+                    }      
+                    Re_found_played=false;
+                } else if (data.message === "Following") {
+                    statusDiv.innerHTML = "Following";
+                    statusDiv.style.color = "#0FFF50";
+                    statusDiv.style.textShadow = "0px 0px 5px #0FFF50, 0px 0px 10px #0FFF50";
+
+                    //need to stop playing lost sound here!
+                    lostSound.pause();
+                    lostSound.currentTime=0;
+                    if(!Re_found_played){
+                        Re_found.play();
+                        Re_found_played=true;
+                    }
+                    Lost_played=false;      
+                } else if (data.message === "No Detection") {
+                    statusDiv.innerHTML = "No Detection";
+                    statusDiv.style.color = "#FFFF33";
+                    statusDiv.style.textShadow = "0px 0px 5px #FFFF33, 0px 0px 10px #FFFF33";
+                }
+        });
+
+        
+
+        function changeValue(range_id, display_id) {
+            document.getElementById(display_id).textContent = document.getElementById(range_id).value;
+        }
+
+        function send_speedChange(side) {
+            let speed;
+
+            if (side === 'left') {
+                speed = document.getElementById('speed_value_left').value / 100;
+            } else {
+                speed = document.getElementById('speed_value_right').value / 100;
+            }
+
+            socket.emit('set_speed', {
+                side: side,
+                value: speed
+            });
+        }
+
+
+        function send_listLenChange(){
+            const list_len = document.getElementById('list_len').value;
+            socket.emit('set_list_len', { value: list_len});
+        }
+
+        function manual() {
+            let manual_mode = document.getElementById('manual_mode').checked;
+            let leftSpeed=document.getElementById('left_speed');
+            let rightSpeed=document.getElementById('right_speed');
+            //leftSpeed.disabled = rightSpeed.disabled = !manual_mode;
+            let data = { value: manual_mode };
+            if (manual_mode) {
+                data.leftSpeed = parseInt(leftSpeed.value) || 0;
+                data.rightSpeed = parseInt(rightSpeed.value) || 0;
+            }else{
+                data.leftSpeed=0;
+                data.rightSpeed=0;
+            }
+            socket.emit('set_manual_mode', data);
+        }
+
+
+
+        // Request status update (can be triggered manually or at an interval)
+        //socket.emit('get_status');
+
+    </script>
+
+
+</body>
+</html>
+
+
