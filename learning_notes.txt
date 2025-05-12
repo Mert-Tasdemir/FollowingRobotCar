@@ -1,0 +1,126 @@
+@app.route('/video')
+def video_feed():
+    return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+
+192.168.77.11:5000/video 'ya girince direkt tüm ekran video gösterilir (streaming oluyorsa)
+-------------------------------------------------------------------------------------------------------------------------
+@app.route('/start')
+def start():
+    global pursuit_active, owner_lost, detected
+    pursuit_active = True
+    owner_lost = False
+    detected = False
+    emit_status()
+    return "Started following"
+
+
+192.168.77.11:5000/start 'a girince beyaz sayfada "Started following" yazısı gözükür. streaming başlatılır.
+
+-------------------------------------------------------------------------------------------------------------------------
+EMITTING
+
+🟢html(sender)-->python(reciever)
+ 
+📍htmle'de
+socket.emit('set_speed', {  //bunu trigger et
+                side: side,
+                value: speed
+            });
+
+📍python'da
+@socketio.on('set_speed')  //bu triggerlanınca
+def handle_set_speed(data):
+    side = data.get('side')  # 'left' or 'right'
+    value = float(data.get('value', 1.0))
+    if side == 'left':
+        global current_speed_factor_left
+        current_speed_factor_left = float(data['value'])  #in range 0.0–1.0
+    elif side == 'right':
+        global current_speed_factor_right
+        current_speed_factor_right = float(data['value'])  #in range 0.0–1.0
+
+🟢python(sender)-->html(reciever)
+
+📍python'da
+# This function emits the current system status
+def emit_status():
+    global pursuit_active, owner_lost, detected
+    """Emit the status update to all connected clients."""
+    #print("Emitting status:", {"pursuit_active": pursuit_active, "owner_lost": owner_lost, "detected": detected})
+    if not pursuit_active:
+        socketio.emit('status_update', {"message": "System Offline"})
+    elif owner_lost:
+        socketio.emit('status_update', {"message": "Target Lost"})
+    elif detected:
+        socketio.emit('status_update', {"message": "Following"})
+    else:
+        socketio.emit('status_update', {"message": "No Detection"})
+
+📍htmle'de
+socket.on('status_update', (data) => {
+            console.log("Received status update:", data); // This will print the data from the server
+            
+            const statusDiv = document.getElementById("status");
+            if (data.message === "System Offline") {
+                statusDiv.innerHTML = "System Offline";
+                Lost_played=false;
+            } else if....
+
+-------------------------------------------------------------------------------------------------------------------------
+@app.route('/video')
+def video_feed():
+    return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+in html:
+<img src="{{ url_for('video_feed') }}"> .will be rendered as: <img src="/video">
+so #generate_frames() starts on page load (when the <img src="/video"> is rendered)
+def generate_frames():
+    global processed_frame
+    while True:
+        with frame_lock:
+            if processed_frame is None:
+                continue
+            _, buffer = cv2.imencode('.jpg', processed_frame)
+            frame_bytes = buffer.tobytes()
+        
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+
+
+#generate_frames() runs in its own thread, but that thread is created by Flask,
+while True in generate_frames() runs only for as long as the client (browser) is connected.
+If multiple users connect to /video, Flask creates multiple threads, each running its own generate_frames() loop.
+
+generate_frames() is not automatically threaded.
+
+The Flask server itself is multi-threaded (if threaded=True or debug=True is used).
+
+When a browser connects to /video, Flask spawns a new thread for that request, which runs generate_frames() inside that thread.
+
+| Component           | Threaded? | Who manages the thread?          |
+| ------------------- | --------- | -------------------------------- |
+| `generate_frames()` | ✅ Yes     | Flask (per-request)              |
+| `flask_thread`      | ✅ Yes     | You (starts Flask in background) |
+
+
+Main Thread
+   │
+   ├── Flask Server Thread (runs the Flask app)
+   │     │
+   │     ├── Thread for /video request → runs generate_frames()
+   │     ├── Thread for /start request → handles start logic
+   │     └── Thread for /stop request  → handles stop logic
+   │
+   └── Main Application Logic (e.g., object detection loop)
+
+
+
+
+-------------------------------------------------------------------------------------------------------------------------
+
+
+-------------------------------------------------------------------------------------------------------------------------
+
+
+-------------------------------------------------------------------------------------------------------------------------

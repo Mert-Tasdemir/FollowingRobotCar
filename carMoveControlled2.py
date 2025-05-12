@@ -21,13 +21,13 @@ processed_frame = None
 frame_lock = threading.Lock()
 
 # Define motor control pins (Raspberry Pi GPIO pins)
-LEFT_IN1 = 24  
-LEFT_IN2 = 23  
-EN_A = 25      
-
-RIGHT_IN3 = 22 
-RIGHT_IN4 = 27 
-EN_B = 17      
+LEFT_IN1 = 24  #left forward
+LEFT_IN2 = 23  #left backward
+EN_A = 25      #left PWM
+             
+RIGHT_IN3 = 22 #right forward
+RIGHT_IN4 = 27 #right backward
+EN_B = 17      #right PWM
 
 # Initialize GPIO
 GPIO.setmode(GPIO.BCM)  # Use Broadcom pin numbering
@@ -54,7 +54,7 @@ model = YOLO(os.getcwd() + "/yolo11_ncnn_model", task='detect')
 results = model.predict(source=None, verbose=False, conf=0) #perform detection on Nothing, to Load the model fully. without this line, when start is clicked in web, it takes long time at 
 #Loading /home/mert/source/FollowingRobotCar/yolo11_ncnn_model for NCNN inference    line  (gives warning because of: source=None)
 
-print(settings)
+#print(settings)
 
 # Open webcam
 #cap = cv2.VideoCapture(0)  # '0' for the default webcam
@@ -125,6 +125,7 @@ no_detection_time = 5 #seconds
 last_seen_time = time.time()
 current_speed_factor_left = 1
 current_speed_factor_right = 1
+turn_coefficient = 1
 
 owner_lost=False
 detected=True #following
@@ -136,7 +137,8 @@ case_targetLost=False
 
 
 
-
+#generate_frames() starts on page load (when the <img src="/video"> is rendered)
+#generate_frames() runs in its own thread, but that thread is created by Flask,
 def generate_frames():
     global processed_frame
     while True:
@@ -294,11 +296,16 @@ class Calculate:
 
         return highest_index, highest_confidence
 
-    def adjust_direction_speed(target_centerX, thresholdX, edge):
+    def calculate_turn_coefficient(turn_coefficient, width):
+        turn_coefficient = ((width-0)/(320-0))*(1-0)+0
+
+    def adjust_direction_speed(target_centerX, thresholdX, edge, width):
+                global turn_coefficient
+                turn_coefficient = Calculate.calculate_turn_coefficient(turn_coefficient, width)
                 if target_centerX<left_limitX or target_centerX>right_limitX:
-                    return MAX_DIRECTION_SPEED
+                    return MAX_DIRECTION_SPEED * turn_coefficient
                 else:
-                    return MAX_DIRECTION_SPEED * (target_centerX - thresholdX) / (edge - thresholdX)                
+                    return MAX_DIRECTION_SPEED * turn_coefficient * (target_centerX - thresholdX) / (edge - thresholdX)                
                 
     def apply_direction_speed(subtract_from_this, directionSpeed): 
         return max(0, int(subtract_from_this-directionSpeed))
@@ -445,12 +452,12 @@ try:
 
                 #left, right
                 if target_centerX < left_thresholdX:
-                    directionSpeed = Calculate.adjust_direction_speed(target_centerX, left_thresholdX, left_limitX)
+                    directionSpeed = Calculate.adjust_direction_speed(target_centerX, left_thresholdX, left_limitX, width)
                     #leftSpeed, rightSpeed = Calculate.apply_direction_speed(leftSpeed, rightSpeed, directionSpeed)
                     leftSpeed = Calculate.apply_direction_speed(leftSpeed, directionSpeed)
 
                 elif target_centerX > right_thresholdX:
-                    directionSpeed = Calculate.adjust_direction_speed(target_centerX, right_thresholdX, right_limitX)
+                    directionSpeed = Calculate.adjust_direction_speed(target_centerX, right_thresholdX, right_limitX, width)
                     #rightSpeed, leftSpeed = Calculate.apply_direction_speed(rightSpeed, leftSpeed, directionSpeed)
                     rightSpeed = Calculate.apply_direction_speed(rightSpeed, directionSpeed)       
                 
@@ -509,7 +516,9 @@ try:
         else:
             # Prevent 'Target is Lost' message when Pursuit is re-enabled
             last_seen_time = time.time()
-            clean()        
+            if not manual_mode:
+                clean() 
+                       
 except KeyboardInterrupt:
     print("Program terminated by user.")
     clean()
