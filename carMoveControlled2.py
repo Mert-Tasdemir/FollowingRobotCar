@@ -37,9 +37,11 @@ MOTOR_PINS = [LEFT_IN1, LEFT_IN2, EN_A, RIGHT_IN3, RIGHT_IN4, EN_B]
 for pin in MOTOR_PINS:
     GPIO.setup(pin, GPIO.OUT)
 
+
+FREQUENCY = 40
 # Set up PWM for speed control
-LEFT_PWM = GPIO.PWM(EN_A, 100)  # 100 Hz PWM frequency
-RIGHT_PWM = GPIO.PWM(EN_B, 100)
+LEFT_PWM = GPIO.PWM(EN_A, FREQUENCY)  # FREQUENCY Hz PWM frequency
+RIGHT_PWM = GPIO.PWM(EN_B, FREQUENCY)
 
 LEFT_PWM.start(0)  # Start with 0% duty cycle
 RIGHT_PWM.start(0)
@@ -214,7 +216,7 @@ def enter_manual_mode(data):
         left_speed = int(data.get('leftSpeed', 0))
         right_speed = int(data.get('rightSpeed', 0))
     Motors.set_motor_speed(left_speed, right_speed)
-    print(f"left_speed={left_speed} and right_speed={right_speed}")
+    print(f"from set_manual_mode  left_speed={left_speed} and right_speed={right_speed}")
 
 
     
@@ -251,38 +253,43 @@ def start_flask():
 flask_thread = threading.Thread(target=start_flask, daemon=True)
 flask_thread.start()
 
-def clean():
-    LEFT_PWM.ChangeDutyCycle(0)
-    RIGHT_PWM.ChangeDutyCycle(0)
-    GPIO.output(LEFT_IN1, GPIO.LOW)
-    GPIO.output(LEFT_IN2, GPIO.LOW)
-    GPIO.output(RIGHT_IN3, GPIO.LOW)
-    GPIO.output(RIGHT_IN4, GPIO.LOW)
 
-    #GPIO.cleanup()
 
 
 class Motors:
+    Processing = False
     
     def set_motor_speed(calculated_leftSpeed, calculated_rightSpeed):
-        calculated_leftSpeed=max(0, min(100, calculated_leftSpeed))
-        calculated_rightSpeed=max(0, min(100, calculated_rightSpeed))
+        if not Motors.Processing:
+            Motors.Processing = True
 
-        GPIO.output(LEFT_IN1, calculated_leftSpeed > 0)
-        GPIO.output(LEFT_IN2, GPIO.LOW)
-        GPIO.output(RIGHT_IN3, calculated_rightSpeed > 0)
-        GPIO.output(RIGHT_IN4, GPIO.LOW)
-        # Δ
-        # |   same logic
-        # ∇ 
-        #GPIO.output(LEFT_IN1, GPIO.HIGH if calculated_leftSpeed > 0 else GPIO.LOW)
-        #GPIO.output(LEFT_IN2, GPIO.LOW)
+            print(">>>>>>> MOTOR SPEED STARTED <<<<<<<")
 
-        #GPIO.output(RIGHT_IN3, GPIO.HIGH if calculated_rightSpeed > 0 else GPIO.LOW)
-        #GPIO.output(RIGHT_IN4, GPIO.LOW)
+            calculated_leftSpeed=max(0, min(100, calculated_leftSpeed))
+            calculated_rightSpeed=max(0, min(100, calculated_rightSpeed))
+
+            LEFT_PWM.ChangeDutyCycle(calculated_leftSpeed)
+            RIGHT_PWM.ChangeDutyCycle(calculated_rightSpeed)        
+
+
+            GPIO.output(LEFT_IN1, GPIO.HIGH)
+            GPIO.output(LEFT_IN2, GPIO.LOW)
+            
+            GPIO.output(RIGHT_IN3, GPIO.HIGH)
+            GPIO.output(RIGHT_IN4, GPIO.LOW)
+
+            print(">>>>>>> MOTOR SPEED COMPLETED <<<<<<<")
         
-        LEFT_PWM.ChangeDutyCycle(calculated_leftSpeed)
-        RIGHT_PWM.ChangeDutyCycle(calculated_rightSpeed)        
+    def clean():
+        if Motors.Processing:
+            Motors.Processing = False
+            LEFT_PWM.ChangeDutyCycle(0)
+            RIGHT_PWM.ChangeDutyCycle(0)
+            GPIO.output(LEFT_IN1, GPIO.LOW)
+            GPIO.output(LEFT_IN2, GPIO.LOW)
+            GPIO.output(RIGHT_IN3, GPIO.LOW)
+            GPIO.output(RIGHT_IN4, GPIO.LOW)
+            
 
 class Calculate:
     
@@ -296,16 +303,16 @@ class Calculate:
 
         return highest_index, highest_confidence
 
-    def calculate_turn_coefficient(turn_coefficient, width):
-        turn_coefficient = ((width-0)/(320-0))*(1-0)+0
+    def calculate_turn_coefficient(width):
+        return ((width-0)/(320-0))*(1-0)+0
 
     def adjust_direction_speed(target_centerX, thresholdX, edge, width):
                 global turn_coefficient
-                turn_coefficient = Calculate.calculate_turn_coefficient(turn_coefficient, width)
+                turn_coefficient = Calculate.calculate_turn_coefficient(width)
                 if target_centerX<left_limitX or target_centerX>right_limitX:
-                    return MAX_DIRECTION_SPEED * turn_coefficient
+                    return int(MAX_DIRECTION_SPEED * turn_coefficient)
                 else:
-                    return MAX_DIRECTION_SPEED * turn_coefficient * (target_centerX - thresholdX) / (edge - thresholdX)                
+                    return int(MAX_DIRECTION_SPEED * turn_coefficient * (target_centerX - thresholdX) / (edge - thresholdX))                
                 
     def apply_direction_speed(subtract_from_this, directionSpeed): 
         return max(0, int(subtract_from_this-directionSpeed))
@@ -374,6 +381,11 @@ class Draw:
 
     
 try:
+
+    #Motors.set_motor_speed(40, 40)
+    # while True:
+    #     print()   
+
     while True:
         
         if pursuit_active and not manual_mode:
@@ -511,21 +523,23 @@ try:
 
             # Exit the loop if 'q' is pressed
             if cv2.waitKey(1) & 0xFF == ord('q'):
-                clean()
+                Motors.clean()
                 break
         else:
             # Prevent 'Target is Lost' message when Pursuit is re-enabled
             last_seen_time = time.time()
             if not manual_mode:
-                clean() 
+                Motors.clean()
+            # if manual_mode:
+            #     Motors.set_motor_speed(40, 40)
                        
 except KeyboardInterrupt:
     print("Program terminated by user.")
-    clean()
+    Motors.clean()
 
 except Exception as e:
     print(f"Error: {e}")
-    clean()
+    Motors.clean()
 
 
 finally:
