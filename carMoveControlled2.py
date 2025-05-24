@@ -380,12 +380,7 @@ class Draw:
 
 
     
-try:
-
-    #Motors.set_motor_speed(40, 40)
-    # while True:
-    #     print()   
-
+try: 
     while True:
         
         if pursuit_active and not manual_mode:
@@ -530,8 +525,7 @@ try:
             last_seen_time = time.time()
             if not manual_mode:
                 Motors.clean()
-            # if manual_mode:
-            #     Motors.set_motor_speed(40, 40)
+            
                        
 except KeyboardInterrupt:
     print("Program terminated by user.")
