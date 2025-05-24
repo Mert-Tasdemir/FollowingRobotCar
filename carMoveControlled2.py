@@ -258,12 +258,16 @@ flask_thread.start()
 
 class Motors:
     Processing = False
+    last_leftSpeed = 0
+    last_rightSpeed = 0
     
     def set_motor_speed(calculated_leftSpeed, calculated_rightSpeed):
         if not Motors.Processing:
             Motors.Processing = True
 
-            print(">>>>>>> MOTOR SPEED STARTED <<<<<<<")
+        if Motors.last_leftSpeed != calculated_leftSpeed or Motors.last_rightSpeed != calculated_rightSpeed:
+            Motors.last_leftSpeed = calculated_leftSpeed
+            Motors.last_rightSpeed = calculated_rightSpeed
 
             calculated_leftSpeed=max(0, min(100, calculated_leftSpeed))
             calculated_rightSpeed=max(0, min(100, calculated_rightSpeed))
@@ -271,14 +275,11 @@ class Motors:
             LEFT_PWM.ChangeDutyCycle(calculated_leftSpeed)
             RIGHT_PWM.ChangeDutyCycle(calculated_rightSpeed)        
 
-
             GPIO.output(LEFT_IN1, GPIO.HIGH)
             GPIO.output(LEFT_IN2, GPIO.LOW)
-            
             GPIO.output(RIGHT_IN3, GPIO.HIGH)
             GPIO.output(RIGHT_IN4, GPIO.LOW)
 
-            print(">>>>>>> MOTOR SPEED COMPLETED <<<<<<<")
         
     def clean():
         if Motors.Processing:
